@@ -1,3 +1,9 @@
+GNUCHESS="../../gnuchess-6.1.1/src/engine/"
+
+OTHEROBJS="../../gnuchess-6.1.1/src/components.o"
+OTHEROBJS+="../../gnuchess-6.1.1/src/engine/libengine.a"
+OTHEROBJS+="../../gnuchess-6.1.1/src/adapter/libadapter.a"
+
 SOURCES  = $(wildcard common/*.cpp)
 SOURCES += $(wildcard *.cpp)
 OBJDIR   = .obj
@@ -15,7 +21,8 @@ SWIGOUTDIR = swig
 $(shell echo "-- OUTPUT = $(SWIGOUTDIR)/$(SWIGLIB)" >&2)
 
 CXX = g++
-CXXFLAGS = -g -O0 -march=corei7 -Wall -I. -Icommon -fPIC
+CXXFLAGS = -g -O0 -march=corei7 -Wall -I. -Icommon -fPIC \
+           -I$(GNUCHESS)
 
 INCPYTHON = $(shell dirname `locate Python.h | grep -v ".hip" | head -n1`)
 $(shell echo "-- INCPYTHON = $(INCPYTHON)" >&2)
@@ -29,7 +36,8 @@ $(OBJDIR)/%.o: %.cpp $(OBJDIR)/dummy
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 $(SWIGLIB): $(SWIGOBJLIST) $(OBJLIST)
-	$(CXX) -shared -o $(SWIGOUTDIR)/$@ $(SWIGOBJLIST) $(OBJLIST)
+	$(CXX) -shared -o $(SWIGOUTDIR)/$@ $(SWIGOBJLIST) $(OBJLIST) \
+      $(OTHEROBJS) -lpthread
 	rm -f *_swig.cxx
 
 $(SWIGOBJLIST): $(SWIGSOURCES)
@@ -40,6 +48,8 @@ $(SWIGSOURCES): $(SWIGFILES) $(OBJDIR)/dummy
 
 $(SWIGOBJDIR)/%.o: $(SWIGSOURCES) $(OBJDIR)/dummy
 	$(CXX) -c $(CXXFLAGS) -I$(INCPYTHON) -Wno-unused-but-set-variable -o $@ $<
+
+
 
 clean:
 	rm -rf $(OBJDIR)
